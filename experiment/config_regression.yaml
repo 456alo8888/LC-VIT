@@ -1,0 +1,21 @@
+data:
+  batch_size: 8
+  num_workers: 0
+
+model:
+  fusion_embed_dim: 512
+  num_heads: 4
+  dropout: 0.2
+
+optim:
+  optimizer: adamw
+  learning_rate: 0.0008
+  weight_decay: 0.0001
+  momentum: 0.9
+
+train:
+  seed: 42
+  max_epochs: 30
+  patience: 5
+  selection_metric: val_mae
+  device: auto
