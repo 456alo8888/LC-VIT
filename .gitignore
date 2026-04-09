@@ -1,8 +1,7 @@
 classification/ 
-research/
+research/logs/
+research/run_model/
 toy/ 
 experiment/__pycache__/
 experiment/artifacts/
 experiment/runs/
-TCFormer/
-
