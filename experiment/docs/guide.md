@@ -68,6 +68,8 @@ Artifact:
 - `/mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/artifacts/merged/merged_manifest.json`
 
 ## 4. Train regression cho `gs_rankin_6isdeath`
+
+### 4.1. Fusion
 Lệnh:
 
 ```bash
@@ -75,10 +77,34 @@ conda run -n hieupcvp python /mnt/disk2/hieupc2/Stroke_project/code/baseline_enc
   --manifest /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/artifacts/merged/merged_manifest.json \
   --target-col gs_rankin_6isdeath \
   --config /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/config_regression.yaml \
-  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/gs_rankin_6isdeath
+  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/gs_rankin_6isdeath_fusion
+```
+
+### 4.2. Image-only
+
+```bash
+conda run -n hieupcvp python /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/train_regression.py \
+  --manifest /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/artifacts/merged/merged_manifest.json \
+  --target-col gs_rankin_6isdeath \
+  --config /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/config_regression.yaml \
+  --model-mode image_only \
+  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/gs_rankin_6isdeath_image_only
+```
+
+### 4.3. Clinical-only
+
+```bash
+conda run -n hieupcvp python /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/train_regression.py \
+  --manifest /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/artifacts/merged/merged_manifest.json \
+  --target-col gs_rankin_6isdeath \
+  --config /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/config_regression.yaml \
+  --model-mode clinical_only \
+  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/gs_rankin_6isdeath_clinical_only
 ```
 
 ## 5. Train regression cho `nihss`
+
+### 5.1. Fusion
 Lệnh:
 
 ```bash
@@ -86,26 +112,48 @@ conda run -n hieupcvp python /mnt/disk2/hieupc2/Stroke_project/code/baseline_enc
   --manifest /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/artifacts/merged/merged_manifest.json \
   --target-col nihss \
   --config /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/config_regression.yaml \
-  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/nihss
+  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/nihss_fusion
+```
+
+### 5.2. Image-only
+
+```bash
+conda run -n hieupcvp python /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/train_regression.py \
+  --manifest /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/artifacts/merged/merged_manifest.json \
+  --target-col nihss \
+  --config /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/config_regression.yaml \
+  --model-mode image_only \
+  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/nihss_image_only
+```
+
+### 5.3. Clinical-only
+
+```bash
+conda run -n hieupcvp python /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/train_regression.py \
+  --manifest /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/artifacts/merged/merged_manifest.json \
+  --target-col nihss \
+  --config /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/config_regression.yaml \
+  --model-mode clinical_only \
+  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/nihss_clinical_only
 ```
 
 ## 6. Eval lại từ checkpoint
 
-### gs_rankin_6isdeath
+### gs_rankin_6isdeath fusion
 ```bash
 conda run -n hieupcvp python /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/eval_regression.py \
   --manifest /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/artifacts/merged/merged_manifest.json \
-  --checkpoint /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/gs_rankin_6isdeath/checkpoints/best.ckpt \
-  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/gs_rankin_6isdeath/eval_reload \
+  --checkpoint /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/gs_rankin_6isdeath_fusion/checkpoints/best.ckpt \
+  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/gs_rankin_6isdeath_fusion/eval_reload \
   --split test
 ```
 
-### nihss
+### nihss fusion
 ```bash
 conda run -n hieupcvp python /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/eval_regression.py \
   --manifest /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/artifacts/merged/merged_manifest.json \
-  --checkpoint /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/nihss/checkpoints/best.ckpt \
-  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/nihss/eval_reload \
+  --checkpoint /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/nihss_fusion/checkpoints/best.ckpt \
+  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/nihss_fusion/eval_reload \
   --split test
 ```
 
@@ -135,7 +183,27 @@ conda run -n hieupcvp python /mnt/disk2/hieupc2/Stroke_project/code/baseline_enc
   --target-col gs_rankin_6isdeath \
   --config /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/config_regression.yaml \
   --max-epochs 1 \
-  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/gs_rankin_6isdeath_smoke
+  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/gs_rankin_6isdeath_fusion_smoke
+```
+
+```bash
+conda run -n hieupcvp python /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/train_regression.py \
+  --manifest /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/artifacts/merged/merged_manifest.json \
+  --target-col gs_rankin_6isdeath \
+  --config /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/config_regression.yaml \
+  --model-mode image_only \
+  --max-epochs 1 \
+  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/gs_rankin_6isdeath_image_only_smoke
+```
+
+```bash
+conda run -n hieupcvp python /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/train_regression.py \
+  --manifest /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/artifacts/merged/merged_manifest.json \
+  --target-col gs_rankin_6isdeath \
+  --config /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/config_regression.yaml \
+  --model-mode clinical_only \
+  --max-epochs 1 \
+  --output-dir /mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/experiment/runs/gs_rankin_6isdeath_clinical_only_smoke
 ```
 
 ## 9. Lưu ý quan trọng
@@ -143,5 +211,9 @@ conda run -n hieupcvp python /mnt/disk2/hieupc2/Stroke_project/code/baseline_enc
 - Để chạy đúng LC-VIT, bạn phải cung cấp:
   - TCFormer repo
   - checkpoint `tcformer_light`
+- Với regression ablation, `--model-mode` hỗ trợ:
+  - `fusion`
+  - `image_only`
+  - `clinical_only`
 - Cohort usable hiện tại là `620` subject vì `sub-335` trong `valid/` không đủ 3 view.
 - `mape` có thể rất lớn do target có giá trị `0`; đây là hành vi nhất quán với công thức đang dùng trong baseline khác của workspace.

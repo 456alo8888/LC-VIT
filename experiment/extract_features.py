@@ -1,11 +1,14 @@
 from __future__ import annotations
-
 import argparse
 import sys
 from pathlib import Path
 from typing import Iterable
 
 import pandas as pd
+
+
+tcformerpath = "/mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/TCFormer/classification"
+sys.path.append(tcformerpath)
 
 from common import (
     DEFAULT_FEATURE_DIR,
@@ -26,7 +29,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--views", nargs="+", default=list(VIEW_NAMES), choices=list(VIEW_NAMES))
     parser.add_argument("--extractor", type=str, default="tcformer", choices=["tcformer", "simple_stats"])
     parser.add_argument("--tcformer-repo", type=Path, default=None)
-    parser.add_argument("--checkpoint", type=Path, default=None)
+    parser.add_argument("--checkpoint", type=Path, default="/mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/classification/tcformer_light-edacd9e5_20220606.pth")
     parser.add_argument("--model-name", type=str, default="tcformer_light")
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--device", type=str, default=None)
@@ -86,7 +89,12 @@ def _build_tcformer_model(args: argparse.Namespace, torch, nn):
         drop_block_rate=None,
     )
 
-    checkpoint = torch.load(args.checkpoint, map_location="cpu")
+    # checkpoint = torch.load(args.checkpoint, map_location="cpu")
+    checkpoint = torch.load(
+        args.checkpoint,
+        map_location='cpu',
+        weights_only=False
+    )
     checkpoint_model = checkpoint.get("model", checkpoint) if isinstance(checkpoint, dict) else checkpoint
     state_dict = model.state_dict()
 

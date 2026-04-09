@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
-import json
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -10,6 +10,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+# import wandb
+
+# try:
+#     wandb.login()
+# except Exception:
+#     os.environ.setdefault("WANDB_MODE", "disabled")
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
@@ -24,7 +30,7 @@ from dataset import (
     split_dataframe,
 )
 from metrics import compute_regression_metrics
-from model import ClinicalImageFusionRegressor
+from model import MODEL_MODES, build_regression_model
 
 
 def parse_args() -> argparse.Namespace:
@@ -38,6 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--num-workers", type=int, default=None)
     parser.add_argument("--device", type=str, default=None)
+    parser.add_argument("--model-mode", type=str, default=None, choices=list(MODEL_MODES))
     return parser.parse_args()
 
 
@@ -77,6 +84,8 @@ def apply_overrides(config: dict, args: argparse.Namespace, output_dir: Path) ->
         config["train"]["max_epochs"] = args.max_epochs
     if args.seed is not None:
         config["train"]["seed"] = args.seed
+    if args.model_mode is not None:
+        config["model"]["mode"] = args.model_mode
 
     config["logging"]["output_dir"] = str(output_dir)
     return config
@@ -109,20 +118,31 @@ def build_dataloaders(bundle, target_col: str, batch_size: int, num_workers: int
     return split_dfs, datasets, dataloaders, tabular_mean, tabular_std
 
 
-def run_epoch(model, dataloader, criterion, optimizer, device):
+def forward_batch(model, batch, device, model_mode: str):
+    clinical = batch["clinical"].to(device)
+    axial = batch["axial"].to(device)
+    coronal = batch["coronal"].to(device)
+    sagittal = batch["sagittal"].to(device)
+
+    if model_mode == "fusion":
+        return model(clinical, axial, coronal, sagittal)
+    if model_mode == "image_only":
+        return model(axial, coronal, sagittal)
+    if model_mode == "clinical_only":
+        return model(clinical)
+    raise ValueError(f"Unsupported model_mode: {model_mode}")
+
+
+def run_epoch(model, dataloader, criterion, optimizer, device, model_mode: str):
     model.train()
     total_loss = 0.0
     total_samples = 0
 
     for batch in dataloader:
-        clinical = batch["clinical"].to(device)
-        axial = batch["axial"].to(device)
-        coronal = batch["coronal"].to(device)
-        sagittal = batch["sagittal"].to(device)
         target = batch["target"].to(device)
 
         optimizer.zero_grad()
-        prediction = model(clinical, axial, coronal, sagittal).squeeze(1)
+        prediction = forward_batch(model, batch, device, model_mode).squeeze(1)
         loss = criterion(prediction, target)
         loss.backward()
         optimizer.step()
@@ -134,7 +154,7 @@ def run_epoch(model, dataloader, criterion, optimizer, device):
     return total_loss / max(1, total_samples)
 
 
-def evaluate(model, dataloader, criterion, device):
+def evaluate(model, dataloader, criterion, device, model_mode: str):
     model.eval()
     rows: list[dict] = []
     y_true: list[np.ndarray] = []
@@ -143,13 +163,9 @@ def evaluate(model, dataloader, criterion, device):
 
     with torch.no_grad():
         for batch in dataloader:
-            clinical = batch["clinical"].to(device)
-            axial = batch["axial"].to(device)
-            coronal = batch["coronal"].to(device)
-            sagittal = batch["sagittal"].to(device)
             target = batch["target"].to(device)
 
-            prediction = model(clinical, axial, coronal, sagittal).squeeze(1)
+            prediction = forward_batch(model, batch, device, model_mode).squeeze(1)
             loss = criterion(prediction, target)
 
             pred_np = prediction.detach().cpu().numpy()
@@ -186,8 +202,12 @@ def save_predictions(output_path: Path, rows: list[dict]) -> None:
 def main() -> None:
     args = parse_args()
     config = load_yaml(args.config)
+    config = apply_overrides(config, args, output_dir=Path(""))
+    model_mode = str(config["model"].get("mode", "fusion"))
+    if model_mode not in MODEL_MODES:
+        raise ValueError(f"Unsupported model.mode: {model_mode}")
 
-    output_dir = args.output_dir or (DEFAULT_RUNS_DIR / args.target_col)
+    output_dir = args.output_dir or (DEFAULT_RUNS_DIR / f"{args.target_col}_{model_mode}")
     output_dir.mkdir(parents=True, exist_ok=True)
     logger = setup_logger(output_dir)
     config = apply_overrides(config, args, output_dir=output_dir)
@@ -200,7 +220,7 @@ def main() -> None:
     if configured_device == "cuda" and not torch.cuda.is_available():
         configured_device = "cpu"
     device = torch.device(configured_device)
-    logger.info("device=%s seed=%s", device, seed)
+    logger.info("device=%s seed=%s model_mode=%s", device, seed, model_mode)
 
     bundle = load_dataset_bundle(args.manifest)
     batch_size = int(config["data"].get("batch_size", 8))
@@ -223,10 +243,12 @@ def main() -> None:
     save_json(output_dir / "debug_shapes.json", debug_payload)
 
     image_embed_dim = len(bundle.view_feature_cols["Axial"])
-    model = ClinicalImageFusionRegressor(
+    model = build_regression_model(
+        model_mode=model_mode,
         clinical_dim=len(bundle.tabular_feature_cols),
         image_embed_dim=image_embed_dim,
         fusion_embed_dim=int(config["model"].get("fusion_embed_dim", image_embed_dim)),
+        hidden_dim=int(config["model"].get("hidden_dim", 256)),
         num_heads=int(config["model"].get("num_heads", 4)),
         dropout=float(config["model"].get("dropout", 0.2)),
     ).to(device)
@@ -248,7 +270,7 @@ def main() -> None:
         optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
     max_epochs = int(config["train"].get("max_epochs", 30))
-    patience = int(config["train"].get("patience", 5))
+    patience = int(config["train"].get("patience", 30))
     selection_metric = str(config["train"].get("selection_metric", "val_mae"))
     mode = "min"
 
@@ -257,8 +279,8 @@ def main() -> None:
     no_improve_count = 0
 
     for epoch in range(1, max_epochs + 1):
-        train_loss = run_epoch(model, dataloaders["train"], criterion, optimizer, device)
-        val_metrics, _ = evaluate(model, dataloaders["valid"], criterion, device)
+        train_loss = run_epoch(model, dataloaders["train"], criterion, optimizer, device, model_mode)
+        val_metrics, _ = evaluate(model, dataloaders["valid"], criterion, device, model_mode)
         current_metric = float(val_metrics["mae"] if selection_metric == "val_mae" else val_metrics["mse"])
         logger.info(
             "epoch=%s train_loss=%.6f val_mse=%.6f val_rmse=%.6f val_mae=%.6f val_mape=%.6f val_r2=%.6f",
@@ -291,12 +313,14 @@ def main() -> None:
     torch.save(
         {
             "model_state_dict": best_state,
+            "model_mode": model_mode,
             "target_col": args.target_col,
             "tabular_feature_cols": bundle.tabular_feature_cols,
             "view_feature_cols": bundle.view_feature_cols,
             "tabular_mean": tabular_mean,
             "tabular_std": tabular_std,
             "config": config,
+            "image_embed_dim": image_embed_dim,
             "merged_manifest_path": str(args.manifest),
             "saved_at": utc_now_iso(),
         },
@@ -304,8 +328,8 @@ def main() -> None:
     )
 
     model.load_state_dict(best_state)
-    val_metrics, val_rows = evaluate(model, dataloaders["valid"], criterion, device)
-    test_metrics, test_rows = evaluate(model, dataloaders["test"], criterion, device)
+    val_metrics, val_rows = evaluate(model, dataloaders["valid"], criterion, device, model_mode)
+    test_metrics, test_rows = evaluate(model, dataloaders["test"], criterion, device, model_mode)
 
     save_json(output_dir / "metrics" / "val_metrics.json", val_metrics)
     save_json(output_dir / "metrics" / "test_metrics.json", test_metrics)
@@ -315,6 +339,7 @@ def main() -> None:
     run_manifest = {
         "created_at": utc_now_iso(),
         "target_col": args.target_col,
+        "model_mode": model_mode,
         "output_dir": str(output_dir),
         "merged_manifest_path": str(args.manifest),
         "feature_extractor": load_json(args.manifest).get("feature_extractor"),

@@ -3,7 +3,9 @@ data:
   num_workers: 0
 
 model:
+  mode: fusion
   fusion_embed_dim: 512
+  hidden_dim: 256
   num_heads: 4
   dropout: 0.2
 
@@ -15,7 +17,7 @@ optim:
 
 train:
   seed: 42
-  max_epochs: 30
-  patience: 5
+  max_epochs: 100
+  patience: 30
   selection_metric: val_mae
   device: auto

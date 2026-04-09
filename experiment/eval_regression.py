@@ -14,7 +14,7 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from common import load_json, save_json, utc_now_iso
 from dataset import LCVITRegressionDataset, load_dataset_bundle, split_dataframe
-from model import ClinicalImageFusionRegressor
+from model import MODEL_MODES, build_regression_model
 from train_regression import evaluate, save_predictions
 
 
@@ -58,19 +58,25 @@ def main() -> None:
     if resolved_device == "cuda" and not torch.cuda.is_available():
         resolved_device = "cpu"
     device = torch.device(resolved_device)
-    image_embed_dim = len(checkpoint["view_feature_cols"]["Axial"])
+    model_mode = str(checkpoint.get("model_mode") or checkpoint["config"].get("model", {}).get("mode", "fusion"))
+    if model_mode not in MODEL_MODES:
+        raise ValueError(f"Unsupported model_mode in checkpoint: {model_mode}")
+
+    image_embed_dim = int(checkpoint.get("image_embed_dim", len(checkpoint["view_feature_cols"]["Axial"])))
     config = checkpoint["config"]
-    model = ClinicalImageFusionRegressor(
+    model = build_regression_model(
+        model_mode=model_mode,
         clinical_dim=len(checkpoint["tabular_feature_cols"]),
         image_embed_dim=image_embed_dim,
         fusion_embed_dim=int(config["model"].get("fusion_embed_dim", image_embed_dim)),
+        hidden_dim=int(config["model"].get("hidden_dim", 256)),
         num_heads=int(config["model"].get("num_heads", 4)),
         dropout=float(config["model"].get("dropout", 0.2)),
     ).to(device)
     model.load_state_dict(checkpoint["model_state_dict"])
 
     criterion = nn.MSELoss()
-    metrics, rows = evaluate(model, dataloader, criterion, device)
+    metrics, rows = evaluate(model, dataloader, criterion, device, model_mode)
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     predictions_path = args.output_dir / f"{args.split}_predictions.csv"
@@ -82,6 +88,7 @@ def main() -> None:
             "created_at": utc_now_iso(),
             "split": args.split,
             "target_col": target_col,
+            "model_mode": model_mode,
             "metrics": metrics,
             "predictions_csv": str(predictions_path),
             "checkpoint": str(args.checkpoint),

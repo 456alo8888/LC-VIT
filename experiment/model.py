@@ -3,6 +3,8 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
+MODEL_MODES = ("fusion", "image_only", "clinical_only")
+
 
 class MutualCrossAttentionModule(nn.Module):
     def __init__(self, embed_dim: int = 512, num_heads: int = 4, dropout: float = 0.1):
@@ -33,21 +35,57 @@ class MutualCrossAttentionModule(nn.Module):
         return out2, attn_weights_a
 
 
+class ClinicalRegressor(nn.Module):
+    def __init__(self, clinical_dim: int, hidden_dim: int = 256, dropout: float = 0.2):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            nn.Linear(clinical_dim, hidden_dim),
+            nn.LeakyReLU(inplace=True),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim, 1),
+        )
+
+    def forward(self, clinical_features: torch.Tensor):
+        return self.mlp(clinical_features)
+
+
+class ImageOnlyRegressor(nn.Module):
+    def __init__(self, image_embed_dim: int, hidden_dim: int = 256, dropout: float = 0.2):
+        super().__init__()
+        merged_dim = image_embed_dim * 3
+        self.mlp = nn.Sequential(
+            nn.Linear(merged_dim, hidden_dim),
+            nn.LeakyReLU(inplace=True),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim, 1),
+        )
+
+    def forward(
+        self,
+        axial_features: torch.Tensor,
+        coronal_features: torch.Tensor,
+        sagittal_features: torch.Tensor,
+    ):
+        merged_features = torch.cat([axial_features, coronal_features, sagittal_features], dim=1)
+        return self.mlp(merged_features)
+
+
 class ClinicalImageFusionRegressor(nn.Module):
     def __init__(
         self,
         clinical_dim: int,
         image_embed_dim: int,
         fusion_embed_dim: int = 512,
+        hidden_dim: int = 256,
         num_heads: int = 4,
         dropout: float = 0.2,
     ):
         super().__init__()
         self.clinical_mlp = nn.Sequential(
-            nn.Linear(clinical_dim, 256),
+            nn.Linear(clinical_dim, hidden_dim),
             nn.LeakyReLU(inplace=True),
             nn.Dropout(dropout),
-            nn.Linear(256, fusion_embed_dim),
+            nn.Linear(hidden_dim, fusion_embed_dim),
         )
         self.image_projection = (
             nn.Identity()
@@ -60,10 +98,10 @@ class ClinicalImageFusionRegressor(nn.Module):
             dropout=dropout,
         )
         self.regressor = nn.Sequential(
-            nn.Linear(fusion_embed_dim, 256),
+            nn.Linear(fusion_embed_dim, hidden_dim),
             nn.LeakyReLU(inplace=True),
             nn.Dropout(dropout),
-            nn.Linear(256, 1),
+            nn.Linear(hidden_dim, 1),
         )
 
     def forward(
@@ -92,3 +130,36 @@ class ClinicalImageFusionRegressor(nn.Module):
         if return_attention:
             return prediction, attn_weights
         return prediction
+
+
+def build_regression_model(
+    model_mode: str,
+    clinical_dim: int,
+    image_embed_dim: int,
+    fusion_embed_dim: int = 512,
+    hidden_dim: int = 256,
+    num_heads: int = 4,
+    dropout: float = 0.2,
+):
+    if model_mode == "fusion":
+        return ClinicalImageFusionRegressor(
+            clinical_dim=clinical_dim,
+            image_embed_dim=image_embed_dim,
+            fusion_embed_dim=fusion_embed_dim,
+            hidden_dim=hidden_dim,
+            num_heads=num_heads,
+            dropout=dropout,
+        )
+    if model_mode == "image_only":
+        return ImageOnlyRegressor(
+            image_embed_dim=image_embed_dim,
+            hidden_dim=hidden_dim,
+            dropout=dropout,
+        )
+    if model_mode == "clinical_only":
+        return ClinicalRegressor(
+            clinical_dim=clinical_dim,
+            hidden_dim=hidden_dim,
+            dropout=dropout,
+        )
+    raise ValueError(f"Unsupported model_mode: {model_mode}")
