@@ -5,3 +5,10 @@ toy/
 experiment/__pycache__/
 experiment/artifacts/
 experiment/runs/
+
+coded_by_codex/
+experiment/docs/*.md 
+experiment/fix_ablation/*.md 
+experiment/fix_feature_extract/
+experiment/fix_fusion/
+research/*.md

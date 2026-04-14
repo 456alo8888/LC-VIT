@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover - only hit outside the experiment env
 EXPERIMENT_DIR = Path(__file__).resolve().parent
 DEFAULT_IMAGE_ROOT = Path("/mnt/disk2/SOOP_views")
 DEFAULT_TABULAR_CSV = Path(
-    "/mnt/disk2/hieupc2/Stroke_project/code/preprocess_MRI/processed_tabular/clinical_encoded.csv"
+    "../../../preprocess_MRI/processed_tabular/clinical_encoded.csv"
 )
 DEFAULT_ARTIFACT_ROOT = EXPERIMENT_DIR / "artifacts"
 DEFAULT_MANIFEST_DIR = DEFAULT_ARTIFACT_ROOT / "manifest_fixed_split"

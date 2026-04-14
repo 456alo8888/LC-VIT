@@ -7,7 +7,7 @@ from typing import Iterable
 import pandas as pd
 
 
-tcformerpath = "/mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/TCFormer/classification"
+tcformerpath = "../TCFormer/classification"
 sys.path.append(tcformerpath)
 
 from common import (
@@ -29,7 +29,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--views", nargs="+", default=list(VIEW_NAMES), choices=list(VIEW_NAMES))
     parser.add_argument("--extractor", type=str, default="tcformer", choices=["tcformer", "simple_stats"])
     parser.add_argument("--tcformer-repo", type=Path, default=None)
-    parser.add_argument("--checkpoint", type=Path, default="/mnt/disk2/hieupc2/Stroke_project/code/baseline_encoder/LC-VIT/classification/tcformer_light-edacd9e5_20220606.pth")
+    parser.add_argument("--checkpoint", type=Path, default="../../../baseline_encoder/LC-VIT/classification/tcformer_light-edacd9e5_20220606.pth")
     parser.add_argument("--model-name", type=str, default="tcformer_light")
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--device", type=str, default=None)
