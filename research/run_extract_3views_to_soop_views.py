@@ -28,10 +28,10 @@ def parse_args() -> argparse.Namespace:
     research_dir = Path(__file__).resolve().parent
 
     parser = argparse.ArgumentParser(description="Batch extract 3-view PNGs into /mnt/disk2/SOOP_views")
-    parser.add_argument("--split-dir", type=Path, default=code_root / "datasets" / "fold_raw_trace")
-    parser.add_argument("--image-root", type=Path, default=Path("/mnt/disk2/SOOP_TRACE_STRIPPED"))
-    parser.add_argument("--mask-root", type=Path, default=Path("/mnt/disk2/SOOP_mask/lesion_masks"))
-    parser.add_argument("--output-root", type=Path, default=Path("/mnt/disk2/SOOP_views"))
+    parser.add_argument("--split-dir", type=Path, default=code_root / "datasets" / "fold_raw_trace_fullmodal_mask")
+    parser.add_argument("--image-root", type=Path, default=Path("/mnt/disk1/SOOP_TRACE_STRIPPED"))
+    parser.add_argument("--mask-root", type=Path, default=Path("/mnt/disk1/SOOP_raw/derivatives/lesion_masks"))
+    parser.add_argument("--output-root", type=Path, default=Path("/mnt/disk1/SOOP_multiview"))
     parser.add_argument("--script-path", type=Path, default=code_root / "utils" / "extract_3views_headless.py")
     parser.add_argument("--log-dir", type=Path, default=research_dir / "logs")
     parser.add_argument("--python-exe", type=str, default=sys.executable)

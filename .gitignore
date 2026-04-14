@@ -14,3 +14,6 @@ experiment/fix_ablation/*.md
 experiment/fix_feature_extract/
 experiment/fix_fusion/
 research/*.md
+research/copy_TRACE.ipynb
+research/*.csv
+research/logs/
