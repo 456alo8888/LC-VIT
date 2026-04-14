@@ -1,4 +1,6 @@
-classification/ 
+/classification/
+__pycache__/
+*.pyc
 research/logs/
 research/run_model/
 toy/ 
