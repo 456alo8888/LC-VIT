@@ -17,3 +17,4 @@ research/*.md
 research/copy_TRACE.ipynb
 research/*.csv
 research/logs/
+experiment/research/
