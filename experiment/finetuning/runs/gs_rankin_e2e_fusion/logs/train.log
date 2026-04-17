@@ -8,3 +8,5 @@
 2026-04-17 13:45:28,393 | INFO | epoch=1 train_loss=3.650866 val_mse=4.010375 val_rmse=2.002592 val_mae=1.662670 val_mape=2142256556.743392 val_r2=-0.224174
 2026-04-17 13:45:53,084 | INFO | device=cuda seed=42 model_mode=fusion
 2026-04-17 13:47:16,140 | INFO | epoch=1 train_loss=3.656443 val_mse=4.040685 val_rmse=2.010145 val_mae=1.668021 val_mape=2127334655.738670 val_r2=-0.233426
+2026-04-17 13:48:38,016 | INFO | epoch=2 train_loss=3.143200 val_mse=3.931084 val_rmse=1.982696 val_mae=1.645877 val_mape=4562988561.318065 val_r2=-0.199970
+2026-04-17 13:50:00,325 | INFO | epoch=3 train_loss=2.893761 val_mse=2.415597 val_rmse=1.554219 val_mae=1.273117 val_mape=2692682067.543377 val_r2=0.262635
