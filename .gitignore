@@ -18,3 +18,5 @@ research/copy_TRACE.ipynb
 research/*.csv
 research/logs/
 experiment/research/
+experiment/finetuning/runs/
+experiment/finetuning/runs_smoke/
