@@ -1,0 +1,9 @@
+2026-04-17 13:24:58,055 | INFO | device=cuda seed=42 model_mode=fusion
+2026-04-17 13:26:23,691 | INFO | epoch=1 train_loss=3.652035 val_mse=4.007617 val_rmse=2.001903 val_mae=1.660703 val_mape=2125002614.191216 val_r2=-0.223332
+2026-04-17 13:27:18,581 | INFO | device=cuda seed=42 model_mode=fusion
+2026-04-17 13:35:45,538 | INFO | device=cuda seed=42 model_mode=fusion
+2026-04-17 13:37:10,184 | INFO | epoch=1 train_loss=3.666173 val_mse=4.168758 val_rmse=2.041754 val_mae=1.687023 val_mape=2030202695.638637 val_r2=-0.272520
+2026-04-17 13:37:41,296 | INFO | device=cuda seed=42 model_mode=fusion
+2026-04-17 13:44:03,257 | INFO | device=cuda seed=42 model_mode=fusion
+2026-04-17 13:45:28,393 | INFO | epoch=1 train_loss=3.650866 val_mse=4.010375 val_rmse=2.002592 val_mae=1.662670 val_mape=2142256556.743392 val_r2=-0.224174
+2026-04-17 13:45:53,084 | INFO | device=cuda seed=42 model_mode=fusion

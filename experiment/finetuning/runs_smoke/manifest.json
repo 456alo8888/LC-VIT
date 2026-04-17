@@ -1,0 +1,28 @@
+{
+  "created_at": "2026-04-17T12:48:50.758674+07:00",
+  "target_col": "gs_rankin_6isdeath",
+  "model_mode": "fusion",
+  "output_dir": "code/baseline_encoder/LC-VIT/experiment/finetuning/runs_smoke",
+  "manifest_dir": "code/baseline_encoder/LC-VIT/experiment/artifacts/manifest_fixed_split",
+  "selection_metric": "val_mae",
+  "seed": 42,
+  "device": "cuda",
+  "split_counts": {
+    "train": 2,
+    "valid": 2,
+    "test": 2
+  },
+  "tabular_feature_cols": [
+    "sex",
+    "age",
+    "race",
+    "acuteischaemicstroke",
+    "priorstroke",
+    "bmi",
+    "etiology"
+  ],
+  "image_embed_dim": 512,
+  "freeze_backbone": true,
+  "unfreeze_after_epoch": null,
+  "best_checkpoint": "code/baseline_encoder/LC-VIT/experiment/finetuning/runs_smoke/checkpoints/best.ckpt"
+}

@@ -1,0 +1,13 @@
+2026-04-17 12:40:07,874 | INFO | device=cuda seed=42 model_mode=fusion
+2026-04-17 12:40:38,968 | INFO | device=cuda seed=42 model_mode=fusion
+2026-04-17 12:41:15,692 | INFO | device=cuda seed=42 model_mode=fusion
+2026-04-17 12:41:53,916 | INFO | device=cuda seed=42 model_mode=fusion
+2026-04-17 12:41:57,362 | INFO | epoch=1 train_loss=4.277401 val_mse=3.490534 val_rmse=1.868297 val_mae=1.630142 val_mape=43.742559 val_r2=-12.962138
+2026-04-17 12:41:59,595 | INFO | Saved checkpoint=code/baseline_encoder/LC-VIT/experiment/finetuning/runs_smoke/checkpoints/best.ckpt
+2026-04-17 12:41:59,595 | INFO | Saved val metrics=code/baseline_encoder/LC-VIT/experiment/finetuning/runs_smoke/metrics/val_metrics.json
+2026-04-17 12:41:59,595 | INFO | Saved test metrics=code/baseline_encoder/LC-VIT/experiment/finetuning/runs_smoke/metrics/test_metrics.json
+2026-04-17 12:48:44,796 | INFO | device=cuda seed=42 model_mode=fusion
+2026-04-17 12:48:48,490 | INFO | epoch=1 train_loss=4.270876 val_mse=3.589229 val_rmse=1.894526 val_mae=1.651559 val_mape=44.302898 val_r2=-13.356916
+2026-04-17 12:48:50,758 | INFO | Saved checkpoint=code/baseline_encoder/LC-VIT/experiment/finetuning/runs_smoke/checkpoints/best.ckpt
+2026-04-17 12:48:50,758 | INFO | Saved val metrics=code/baseline_encoder/LC-VIT/experiment/finetuning/runs_smoke/metrics/val_metrics.json
+2026-04-17 12:48:50,758 | INFO | Saved test metrics=code/baseline_encoder/LC-VIT/experiment/finetuning/runs_smoke/metrics/test_metrics.json
