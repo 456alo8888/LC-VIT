@@ -10,3 +10,15 @@
 2026-04-17 13:47:16,140 | INFO | epoch=1 train_loss=3.656443 val_mse=4.040685 val_rmse=2.010145 val_mae=1.668021 val_mape=2127334655.738670 val_r2=-0.233426
 2026-04-17 13:48:38,016 | INFO | epoch=2 train_loss=3.143200 val_mse=3.931084 val_rmse=1.982696 val_mae=1.645877 val_mape=4562988561.318065 val_r2=-0.199970
 2026-04-17 13:50:00,325 | INFO | epoch=3 train_loss=2.893761 val_mse=2.415597 val_rmse=1.554219 val_mae=1.273117 val_mape=2692682067.543377 val_r2=0.262635
+2026-04-17 13:51:22,524 | INFO | epoch=4 train_loss=2.426299 val_mse=2.282024 val_rmse=1.510637 val_mae=1.265079 val_mape=2650779893.287949 val_r2=0.303408
+2026-04-17 13:52:44,421 | INFO | epoch=5 train_loss=2.590164 val_mse=2.593625 val_rmse=1.610473 val_mae=1.208037 val_mape=1623856772.012939 val_r2=0.208292
+2026-04-17 13:52:44,434 | INFO | Backbone unfrozen at epoch=6
+2026-04-17 14:23:10,271 | INFO | device=cuda seed=42 model_mode=fusion
+2026-04-17 14:24:31,929 | INFO | epoch=1 train_loss=3.649425 val_mse=3.994330 val_rmse=1.998582 val_mae=1.659472 val_mape=2146762142.308750 val_r2=-0.219276
+2026-04-17 14:24:48,540 | INFO | device=cuda seed=42 model_mode=fusion
+2026-04-17 14:25:55,550 | INFO | epoch=2 train_loss=3.115868 val_mse=4.015480 val_rmse=2.003866 val_mae=1.651544 val_mape=4619810324.021413 val_r2=-0.225732
+2026-04-17 14:26:16,186 | INFO | epoch=1 train_loss=3.650032 val_mse=3.951064 val_rmse=1.987728 val_mae=1.652677 val_mape=2183287984.091866 val_r2=-0.206069
+2026-04-17 14:27:19,962 | INFO | epoch=3 train_loss=2.865781 val_mse=2.339029 val_rmse=1.529388 val_mae=1.219611 val_mape=2713508945.102667 val_r2=0.286008
+2026-04-17 14:27:40,654 | INFO | epoch=2 train_loss=3.132016 val_mse=3.932630 val_rmse=1.983086 val_mae=1.638284 val_mape=4569601677.442247 val_r2=-0.200442
+2026-04-17 14:28:44,950 | INFO | epoch=4 train_loss=2.793017 val_mse=3.117303 val_rmse=1.765589 val_mae=1.447708 val_mape=2436047679.303221 val_r2=0.048438
+2026-04-17 14:29:05,634 | INFO | epoch=3 train_loss=2.909426 val_mse=2.502506 val_rmse=1.581931 val_mae=1.290968 val_mape=2965131735.335533 val_r2=0.236106
