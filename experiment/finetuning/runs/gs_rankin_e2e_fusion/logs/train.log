@@ -7,3 +7,4 @@
 2026-04-17 13:44:03,257 | INFO | device=cuda seed=42 model_mode=fusion
 2026-04-17 13:45:28,393 | INFO | epoch=1 train_loss=3.650866 val_mse=4.010375 val_rmse=2.002592 val_mae=1.662670 val_mape=2142256556.743392 val_r2=-0.224174
 2026-04-17 13:45:53,084 | INFO | device=cuda seed=42 model_mode=fusion
+2026-04-17 13:47:16,140 | INFO | epoch=1 train_loss=3.656443 val_mse=4.040685 val_rmse=2.010145 val_mae=1.668021 val_mape=2127334655.738670 val_r2=-0.233426
