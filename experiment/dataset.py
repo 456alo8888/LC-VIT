@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable
+from typing import Any, Dict, Iterable
 
 import numpy as np
 import pandas as pd
@@ -17,6 +17,7 @@ class DatasetBundle:
     dataframe: pd.DataFrame
     tabular_feature_cols: list[str]
     view_feature_cols: Dict[str, list[str]]
+    target_col: str | None = None
 
 
 def load_dataset_bundle(merged_manifest_path: Path) -> DatasetBundle:
@@ -25,6 +26,41 @@ def load_dataset_bundle(merged_manifest_path: Path) -> DatasetBundle:
     tabular_feature_cols = list(merged_manifest["tabular_feature_cols"])
     view_feature_cols = {key: list(value) for key, value in merged_manifest["view_feature_cols"].items()}
     return DatasetBundle(dataframe=dataframe, tabular_feature_cols=tabular_feature_cols, view_feature_cols=view_feature_cols)
+
+
+def load_dataset_bundle_for_target(merged_manifest_path: Path | str, target_col: str) -> DatasetBundle:
+    if target_col not in TARGET_COLUMNS:
+        raise ValueError(f"Unsupported target column: {target_col}")
+
+    merged_manifest = load_json(Path(merged_manifest_path))
+    view_feature_cols = {key: list(value) for key, value in merged_manifest["view_feature_cols"].items()}
+
+    target_config: Dict[str, Any] | None = merged_manifest.get("target_configs", {}).get(target_col)
+    if target_config is not None:
+        merged_csv = target_config.get("merged_csv") or merged_manifest.get("files", {}).get(
+            "merged_csv_by_target", {}
+        ).get(target_col)
+        if merged_csv is None:
+            raise ValueError(f"Missing merged CSV for target '{target_col}' in {merged_manifest_path}")
+
+        dataframe = pd.read_csv(merged_csv)
+        tabular_feature_cols = list(target_config.get("tabular_feature_cols", []))
+        return DatasetBundle(
+            dataframe=dataframe,
+            tabular_feature_cols=tabular_feature_cols,
+            view_feature_cols=view_feature_cols,
+            target_col=target_col,
+        )
+
+    # Backward compatibility for legacy merged manifests.
+    dataframe = pd.read_csv(merged_manifest["merged_csv"])
+    tabular_feature_cols = list(merged_manifest["tabular_feature_cols"])
+    return DatasetBundle(
+        dataframe=dataframe,
+        tabular_feature_cols=tabular_feature_cols,
+        view_feature_cols=view_feature_cols,
+        target_col=target_col,
+    )
 
 
 def split_dataframe(dataframe: pd.DataFrame) -> Dict[str, pd.DataFrame]:
@@ -78,6 +114,16 @@ class LCVITRegressionDataset(Dataset):
         self.target_col = target_col
         self.tabular_feature_cols = list(tabular_feature_cols)
         self.view_feature_cols = {key: list(value) for key, value in view_feature_cols.items()}
+
+        missing_tabular_cols = sorted(set(self.tabular_feature_cols) - set(self.dataframe.columns))
+        if missing_tabular_cols:
+            raise ValueError(
+                f"Missing tabular columns for target '{target_col}': {missing_tabular_cols}"
+            )
+        if target_col not in self.dataframe.columns:
+            raise ValueError(
+                f"Target column '{target_col}' not found in dataframe columns."
+            )
 
         tabular = (
             self.dataframe.loc[:, self.tabular_feature_cols]

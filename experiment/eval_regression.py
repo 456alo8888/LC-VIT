@@ -13,7 +13,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from common import load_json, save_json, utc_now_iso
-from dataset import LCVITRegressionDataset, load_dataset_bundle, split_dataframe
+from dataset import LCVITRegressionDataset, load_dataset_bundle_for_target, split_dataframe
 from model import MODEL_MODES, build_regression_model
 from train_regression import evaluate, save_predictions
 
@@ -35,9 +35,20 @@ def main() -> None:
     checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     target_col = checkpoint["target_col"]
 
-    bundle = load_dataset_bundle(args.manifest)
+    bundle = load_dataset_bundle_for_target(args.manifest, target_col=target_col)
     split_dfs = split_dataframe(bundle.dataframe)
     split_df = split_dfs[args.split]
+
+    missing_checkpoint_tabular_cols = sorted(
+        set(checkpoint["tabular_feature_cols"]) - set(split_df.columns)
+    )
+    if missing_checkpoint_tabular_cols:
+        raise ValueError(
+            "Checkpoint/data schema mismatch for target "
+            f"'{target_col}'. Missing columns: {missing_checkpoint_tabular_cols}"
+        )
+    if target_col not in split_df.columns:
+        raise ValueError(f"Target column '{target_col}' is missing from selected split dataframe.")
 
     dataset = LCVITRegressionDataset(
         dataframe=split_df,

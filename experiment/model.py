@@ -28,7 +28,8 @@ class MutualCrossAttentionModule(nn.Module):
         output_a, attn_weights_a = self.mha(x1, x2, x2)
         output_b, _ = self.mha(x2, x1, x1)
         output = output_a + output_b
-        out1 = self.layer_norm1(x1 + output)
+        # out1 = self.layer_norm1(x1 + output)
+        out1 = self.layer_norm1(output)
         ff_output = self.feed_forward(out1)
         ff_output = self.dropout(ff_output)
         out2 = self.layer_norm2(out1 + ff_output)
@@ -141,6 +142,9 @@ def build_regression_model(
     num_heads: int = 4,
     dropout: float = 0.2,
 ):
+    if clinical_dim <= 0:
+        raise ValueError(f"clinical_dim must be > 0, got {clinical_dim}")
+
     if model_mode == "fusion":
         return ClinicalImageFusionRegressor(
             clinical_dim=clinical_dim,

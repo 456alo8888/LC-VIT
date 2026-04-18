@@ -55,7 +55,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max-epochs", type=int, default=30)
-    parser.add_argument("--patience", type=int, default=30)
+    parser.add_argument("--patience", type=int, default=12)
     parser.add_argument("--selection-metric", type=str, default="val_mae", choices=["val_mae", "val_mse"])
     parser.add_argument("--model-mode", type=str, default="fusion", choices=list(MODEL_MODES))
     parser.add_argument("--fusion-embed-dim", type=int, default=512)
@@ -63,7 +63,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-heads", type=int, default=4)
     parser.add_argument("--dropout", type=float, default=0.2)
     parser.add_argument("--backbone-lr", type=float, default=1e-5)
-    parser.add_argument("--head-lr", type=float, default=8e-4)
+    parser.add_argument("--head-lr", type=float, default=5e-4)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--optimizer", type=str, default="adamw", choices=["adamw", "adam", "sgd"])
     parser.add_argument("--momentum", type=float, default=0.9)
@@ -76,6 +76,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--wandb-project", type=str, default=None)
     parser.add_argument("--wandb-entity", type=str, default=None)
     parser.add_argument("--wandb-run-name", type=str, default=None)
+    parser.add_argument("--final-eval", action="store_true", help="Run final evaluation on test set after training")
     return parser.parse_args()
 
 
@@ -274,6 +275,40 @@ class EndToEndLCVITDataset(Dataset):
 
 def build_dataloaders(bundle: EndToEndBundle, args: argparse.Namespace, cv2):
     split_dfs = split_dataframe(bundle.dataframe)
+    tabular_mean, tabular_std = compute_tabular_stats(split_dfs["train"], bundle.tabular_feature_cols)
+    mean, std = _build_normalization_tensors()
+
+    datasets = {
+        split: EndToEndLCVITDataset(
+            dataframe=dataframe,
+            target_col=args.target_col,
+            tabular_feature_cols=bundle.tabular_feature_cols,
+            tabular_mean=tabular_mean,
+            tabular_std=tabular_std,
+            cv2=cv2,
+            mean=mean,
+            std=std,
+        )
+        for split, dataframe in split_dfs.items()
+    }
+    dataloaders = {
+        split: DataLoader(
+            dataset,
+            batch_size=args.batch_size,
+            shuffle=(split == "train"),
+            num_workers=args.num_workers,
+        )
+        for split, dataset in datasets.items()
+    }
+    return split_dfs, datasets, dataloaders, tabular_mean, tabular_std
+
+
+def build_dataloaders_for_final_eval(bundle: EndToEndBundle, args: argparse.Namespace, cv2):
+    split_dfs = split_dataframe(bundle.dataframe)
+    train_parts = [split_dfs["train"], split_dfs["valid"]]
+    train_df = pd.concat(train_parts, axis=0, ignore_index=True)
+    split_dfs["train"] = train_df.reset_index(drop=True)
+
     tabular_mean, tabular_std = compute_tabular_stats(split_dfs["train"], bundle.tabular_feature_cols)
     mean, std = _build_normalization_tensors()
 
@@ -508,6 +543,7 @@ def _build_wandb_run(args: argparse.Namespace, output_dir: Path):
         "max_epochs": args.max_epochs,
         "patience": args.patience,
         "selection_metric": args.selection_metric,
+        "final_eval": bool(args.final_eval),
         "optimizer": args.optimizer,
         "backbone_lr": args.backbone_lr,
         "head_lr": args.head_lr,
@@ -541,13 +577,22 @@ def main() -> None:
     cv2 = _import_runtime_modules()
 
     bundle = load_end_to_end_bundle(args.manifest_dir, limit=args.limit)
-    split_dfs, _, dataloaders, tabular_mean, tabular_std = build_dataloaders(
-        bundle=bundle,
-        args=args,
-        cv2=cv2,
-    )
+    if args.final_eval:
+        split_dfs, _, dataloaders, tabular_mean, tabular_std = build_dataloaders_for_final_eval(
+            bundle=bundle,
+            args=args,
+            cv2=cv2,
+        )
+    else:
+        split_dfs, _, dataloaders, tabular_mean, tabular_std = build_dataloaders(
+            bundle=bundle,
+            args=args,
+            cv2=cv2,
+        )
     if len(split_dfs["train"]) == 0:
         raise RuntimeError("Training split is empty after filtering.")
+    if len(split_dfs["test"]) == 0:
+        raise RuntimeError("Test split is empty after filtering.")
 
     if wandb_run is not None:
         wandb_run.log(
@@ -612,27 +657,82 @@ def main() -> None:
         logger.info("Dry run complete.")
         return
 
-    criterion = nn.MSELoss()
+    # criterion = nn.MSELoss()
+    criterion = nn.HuberLoss(delta=1.0)
     optimizer = _build_optimizer(model, args)
 
     best_metric = float("inf")
     best_state = None
     no_improve_count = 0
 
-    for epoch in range(1, args.max_epochs + 1):
-        if args.unfreeze_after_epoch is not None and epoch > args.unfreeze_after_epoch:
-            if not any(param.requires_grad for param in model.backbone.parameters()):
-                _toggle_backbone_grad(model.backbone, enabled=True)
-                optimizer = _build_optimizer(model, args)
-                logger.info("Backbone unfrozen at epoch=%s", epoch)
+    if args.final_eval:
+        for epoch in range(1, args.max_epochs + 1):
+            if args.unfreeze_after_epoch is not None and epoch > args.unfreeze_after_epoch:
+                if not any(param.requires_grad for param in model.backbone.parameters()):
+                    _toggle_backbone_grad(model.backbone, enabled=True)
+                    optimizer = _build_optimizer(model, args)
+                    logger.info("Backbone unfrozen at epoch=%s", epoch)
 
-        train_loss = run_epoch(model, dataloaders["train"], criterion, optimizer, device, epoch=epoch)
-        val_metrics, _ = evaluate(model, dataloaders["valid"], criterion, device, split_name="Valid", epoch=epoch)
-        current_metric = float(val_metrics["mae"] if args.selection_metric == "val_mae" else val_metrics["mse"])
-        
-        tqdm.write(
-            "epoch=%s train_loss=%.6f val_mse=%.6f val_rmse=%.6f val_mae=%.6f val_mape=%.6f val_r2=%.6f"
-            % (
+            train_loss = run_epoch(model, dataloaders["train"], criterion, optimizer, device, epoch=epoch)
+            tqdm.write("epoch=%s train_loss=%.6f (final_eval mode)" % (epoch, train_loss))
+            logger.info("epoch=%s train_loss=%.6f (final_eval mode)", epoch, train_loss)
+            test_metrics, _ = evaluate(model, dataloaders["test"], criterion, device, split_name="Test")
+            current_metric = float(test_metrics["mae"] if args.selection_metric == "val_mae" else test_metrics["mse"])
+
+            logger.info(
+                "epoch=%s test_mse=%.6f test_rmse=%.6f test_mae=%.6f test_mape=%.6f test_r2=%.6f",
+                epoch,
+                test_metrics["mse"],
+                test_metrics["rmse"],
+                test_metrics["mae"],
+                test_metrics["mape"],
+                test_metrics["r2"],
+            )
+
+            if wandb_run is not None:
+                wandb_run.log(
+                    {
+                        "train/loss": float(train_loss),
+                        "train/epoch": float(epoch),
+                        "train/final_eval_mode": 1.0,
+                        **_build_wandb_payload(
+                            prefix="test",
+                            metrics=test_metrics,
+                            samples=len(split_dfs["test"]),
+                            iteration=epoch,
+                        ),
+                    }
+                )
+
+            if current_metric < best_metric:
+                best_metric = current_metric
+                best_state = {key: value.detach().cpu() for key, value in model.state_dict().items()}
+    else:
+        for epoch in range(1, args.max_epochs + 1):
+            if args.unfreeze_after_epoch is not None and epoch > args.unfreeze_after_epoch:
+                if not any(param.requires_grad for param in model.backbone.parameters()):
+                    _toggle_backbone_grad(model.backbone, enabled=True)
+                    optimizer = _build_optimizer(model, args)
+                    logger.info("Backbone unfrozen at epoch=%s", epoch)
+
+            train_loss = run_epoch(model, dataloaders["train"], criterion, optimizer, device, epoch=epoch)
+            val_metrics, _ = evaluate(model, dataloaders["valid"], criterion, device, split_name="Valid", epoch=epoch)
+            current_metric = float(val_metrics["mae"] if args.selection_metric == "val_mae" else val_metrics["mse"])
+
+            tqdm.write(
+                "epoch=%s train_loss=%.6f val_mse=%.6f val_rmse=%.6f val_mae=%.6f val_mape=%.6f val_r2=%.6f"
+                % (
+                    epoch,
+                    train_loss,
+                    val_metrics["mse"],
+                    val_metrics["rmse"],
+                    val_metrics["mae"],
+                    val_metrics["mape"],
+                    val_metrics["r2"],
+                )
+            )
+            logger.info(
+                "epoch=%s train_loss=%.6f val_mse=%.6f val_rmse=%.6f val_mae=%.6f val_mape=%.6f val_r2=%.6f",
                 epoch,
                 train_loss,
                 val_metrics["mse"],
@@ -641,41 +741,30 @@ def main() -> None:
                 val_metrics["mape"],
                 val_metrics["r2"],
             )
-        )
-        logger.info(
-            "epoch=%s train_loss=%.6f val_mse=%.6f val_rmse=%.6f val_mae=%.6f val_mape=%.6f val_r2=%.6f",
-            epoch,
-            train_loss,
-            val_metrics["mse"],
-            val_metrics["rmse"],
-            val_metrics["mae"],
-            val_metrics["mape"],
-            val_metrics["r2"],
-        )
-        if wandb_run is not None:
-            wandb_run.log(
-                {
-                    "train/loss": float(train_loss),
-                    "train/epoch": float(epoch),
-                    **_build_wandb_payload(
-                        prefix="val",
-                        metrics=val_metrics,
-                        samples=len(split_dfs["valid"]),
-                        iteration=epoch,
-                    ),
-                }
-            )
+            if wandb_run is not None:
+                wandb_run.log(
+                    {
+                        "train/loss": float(train_loss),
+                        "train/epoch": float(epoch),
+                        **_build_wandb_payload(
+                            prefix="val",
+                            metrics=val_metrics,
+                            samples=len(split_dfs["valid"]),
+                            iteration=epoch,
+                        ),
+                    }
+                )
 
-        if current_metric < best_metric:
-            best_metric = current_metric
-            best_state = {key: value.detach().cpu() for key, value in model.state_dict().items()}
-            no_improve_count = 0
-        else:
-            no_improve_count += 1
+            if current_metric < best_metric:
+                best_metric = current_metric
+                best_state = {key: value.detach().cpu() for key, value in model.state_dict().items()}
+                no_improve_count = 0
+            else:
+                no_improve_count += 1
 
-        if no_improve_count >= args.patience:
-            logger.info("Early stopping triggered at epoch=%s", epoch)
-            break
+            if no_improve_count >= args.patience:
+                logger.info("Early stopping triggered at epoch=%s", epoch)
+                break
 
     if best_state is None:
         raise RuntimeError("Training did not produce a checkpoint.")
@@ -699,13 +788,19 @@ def main() -> None:
     )
 
     model.load_state_dict(best_state)
-    val_metrics, val_rows = evaluate(model, dataloaders["valid"], criterion, device)
-    test_metrics, test_rows = evaluate(model, dataloaders["test"], criterion, device)
+    if args.final_eval:
+        test_metrics, test_rows = evaluate(model, dataloaders["test"], criterion, device, split_name="Test")
+        save_json(output_dir / "metrics" / "test_metrics.json", test_metrics)
+        save_predictions(output_dir / "predictions" / "test_predictions.csv", test_rows)
+        val_metrics = None
+    else:
+        val_metrics, val_rows = evaluate(model, dataloaders["valid"], criterion, device)
+        test_metrics, test_rows = evaluate(model, dataloaders["test"], criterion, device)
 
-    save_json(output_dir / "metrics" / "val_metrics.json", val_metrics)
-    save_json(output_dir / "metrics" / "test_metrics.json", test_metrics)
-    save_predictions(output_dir / "predictions" / "valid_predictions.csv", val_rows)
-    save_predictions(output_dir / "predictions" / "test_predictions.csv", test_rows)
+        save_json(output_dir / "metrics" / "val_metrics.json", val_metrics)
+        save_json(output_dir / "metrics" / "test_metrics.json", test_metrics)
+        save_predictions(output_dir / "predictions" / "valid_predictions.csv", val_rows)
+        save_predictions(output_dir / "predictions" / "test_predictions.csv", test_rows)
 
     run_manifest = {
         "created_at": utc_now_iso(),
@@ -721,20 +816,25 @@ def main() -> None:
         "image_embed_dim": image_embed_dim,
         "freeze_backbone": bool(args.freeze_backbone),
         "unfreeze_after_epoch": args.unfreeze_after_epoch,
+        "final_eval": bool(args.final_eval),
+        "final_eval_train_splits": ["train", "valid"] if args.final_eval else ["train"],
         "best_checkpoint": str(checkpoint_path),
     }
     save_json(output_dir / "manifest.json", run_manifest)
 
     if wandb_run is not None:
-        wandb_run.log(_build_wandb_payload("final/val", val_metrics, len(split_dfs["valid"])))
+        if val_metrics is not None:
+            wandb_run.log(_build_wandb_payload("final/val", val_metrics, len(split_dfs["valid"])))
         wandb_run.log(_build_wandb_payload("final/test", test_metrics, len(split_dfs["test"])))
         wandb_run.summary["best_checkpoint"] = str(checkpoint_path)
         wandb_run.summary["best_selection_metric"] = float(best_metric)
         wandb_run.summary["output_dir"] = str(output_dir)
+        wandb_run.summary["final_eval"] = bool(args.final_eval)
         wandb_run.finish()
 
     logger.info("Saved checkpoint=%s", checkpoint_path)
-    logger.info("Saved val metrics=%s", output_dir / "metrics" / "val_metrics.json")
+    if not args.final_eval:
+        logger.info("Saved val metrics=%s", output_dir / "metrics" / "val_metrics.json")
     logger.info("Saved test metrics=%s", output_dir / "metrics" / "test_metrics.json")
 
 

@@ -26,7 +26,7 @@ from dataset import (
     LCVITRegressionDataset,
     compute_tabular_stats,
     debug_shapes,
-    load_dataset_bundle,
+    load_dataset_bundle_for_target,
     split_dataframe,
 )
 from metrics import compute_regression_metrics
@@ -222,7 +222,7 @@ def main() -> None:
     device = torch.device(configured_device)
     logger.info("device=%s seed=%s model_mode=%s", device, seed, model_mode)
 
-    bundle = load_dataset_bundle(args.manifest)
+    bundle = load_dataset_bundle_for_target(args.manifest, target_col=args.target_col)
     batch_size = int(config["data"].get("batch_size", 8))
     num_workers = int(config["data"].get("num_workers", 0))
     split_dfs, datasets, dataloaders, tabular_mean, tabular_std = build_dataloaders(
@@ -242,10 +242,14 @@ def main() -> None:
     }
     save_json(output_dir / "debug_shapes.json", debug_payload)
 
+    clinical_dim = len(bundle.tabular_feature_cols)
+    if clinical_dim <= 0:
+        raise ValueError(f"No tabular features resolved for target '{args.target_col}'.")
+
     image_embed_dim = len(bundle.view_feature_cols["Axial"])
     model = build_regression_model(
         model_mode=model_mode,
-        clinical_dim=len(bundle.tabular_feature_cols),
+        clinical_dim=clinical_dim,
         image_embed_dim=image_embed_dim,
         fusion_embed_dim=int(config["model"].get("fusion_embed_dim", image_embed_dim)),
         hidden_dim=int(config["model"].get("hidden_dim", 256)),
@@ -348,6 +352,7 @@ def main() -> None:
         "device": str(device),
         "split_counts": {split: int(len(df)) for split, df in split_dfs.items()},
         "tabular_feature_cols": bundle.tabular_feature_cols,
+        "resolved_target_col": bundle.target_col,
         "view_feature_dims": {view: len(columns) for view, columns in bundle.view_feature_cols.items()},
         "best_checkpoint": str(checkpoint_path),
     }
