@@ -1,0 +1,24 @@
+data:
+  batch_size: 8
+  num_workers: 0
+  manifest_path: /mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/artifacts/merged/merged_manifest.json
+  target_col: gs_rankin_6isdeath
+model:
+  mode: fusion
+  fusion_embed_dim: 512
+  hidden_dim: 256
+  num_heads: 4
+  dropout: 0.2
+optim:
+  optimizer: adamw
+  learning_rate: 0.0008
+  weight_decay: 0.0001
+  momentum: 0.9
+train:
+  seed: 42
+  max_epochs: 100
+  patience: 30
+  selection_metric: val_mae
+  device: auto
+logging:
+  output_dir: /mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/artifacts/runs/gs_rankin_6isdeath_fusion

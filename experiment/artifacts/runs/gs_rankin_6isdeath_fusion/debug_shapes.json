@@ -1,0 +1,23 @@
+{
+  "train": {
+    "n_samples": 434,
+    "clinical_dim": 11,
+    "axial_dim": 512,
+    "coronal_dim": 512,
+    "sagittal_dim": 512
+  },
+  "valid": {
+    "n_samples": 93,
+    "clinical_dim": 11,
+    "axial_dim": 512,
+    "coronal_dim": 512,
+    "sagittal_dim": 512
+  },
+  "test": {
+    "n_samples": 93,
+    "clinical_dim": 11,
+    "axial_dim": 512,
+    "coronal_dim": 512,
+    "sagittal_dim": 512
+  }
+}

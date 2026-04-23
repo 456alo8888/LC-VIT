@@ -1,0 +1,2 @@
+participant_id,split,reason,missing_views
+sub-335,train,missing_view,"['Axial', 'Coronal', 'Sagittal']"

@@ -1,0 +1,36 @@
+{
+  "created_at": "2026-04-18T02:07:55.472731+07:00",
+  "target_col": "gs_rankin_6isdeath",
+  "model_mode": "fusion",
+  "output_dir": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/artifacts/runs/gs_rankin_6isdeath_fusion",
+  "merged_manifest_path": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/artifacts/merged/merged_manifest.json",
+  "feature_extractor": "tcformer",
+  "selection_metric": "val_mae",
+  "seed": 42,
+  "device": "cuda",
+  "split_counts": {
+    "train": 434,
+    "valid": 93,
+    "test": 93
+  },
+  "tabular_feature_cols": [
+    "sex",
+    "race",
+    "acuteischaemicstroke",
+    "priorstroke",
+    "bmi",
+    "age",
+    "etiology_1",
+    "etiology_2",
+    "etiology_3",
+    "etiology_4",
+    "etiology_5"
+  ],
+  "resolved_target_col": "gs_rankin_6isdeath",
+  "view_feature_dims": {
+    "Axial": 512,
+    "Coronal": 512,
+    "Sagittal": 512
+  },
+  "best_checkpoint": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/artifacts/runs/gs_rankin_6isdeath_fusion/checkpoints/best.ckpt"
+}

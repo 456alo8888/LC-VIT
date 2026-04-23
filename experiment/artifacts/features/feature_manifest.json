@@ -1,0 +1,25 @@
+{
+  "created_at": "2026-04-18T02:02:14.237190+07:00",
+  "manifest_dir": "artifacts/manifest_fixed_split",
+  "extractor": "tcformer",
+  "views": [
+    "Axial",
+    "Coronal",
+    "Sagittal"
+  ],
+  "limit": null,
+  "device": "cuda",
+  "tcformer_repo": "../TCFormer",
+  "checkpoint": "../../../baseline_encoder/LC-VIT/classification/tcformer_light-edacd9e5_20220606.pth",
+  "model_name": "tcformer_light",
+  "files": {
+    "Axial": "artifacts/features/features_axial.csv",
+    "Coronal": "artifacts/features/features_coronal.csv",
+    "Sagittal": "artifacts/features/features_sagittal.csv"
+  },
+  "feature_dims": {
+    "Axial": 512,
+    "Coronal": 512,
+    "Sagittal": 512
+  }
+}
