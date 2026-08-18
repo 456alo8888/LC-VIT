@@ -1,0 +1,94 @@
+{
+  "validated_at": "2026-08-07T01:59:38.862004+07:00",
+  "config": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/782026/config/kfold.yaml",
+  "check_images": false,
+  "status": "passed",
+  "folds": [
+    {
+      "fold": 0,
+      "status": "passed",
+      "canonical_subject_count": 622,
+      "usable_subject_count": 620,
+      "split_counts": {
+        "train": 396,
+        "valid": 99,
+        "test": 125
+      },
+      "excluded_subjects": [
+        "sub-235",
+        "sub-335"
+      ],
+      "images_decoded": false
+    },
+    {
+      "fold": 1,
+      "status": "passed",
+      "canonical_subject_count": 622,
+      "usable_subject_count": 620,
+      "split_counts": {
+        "train": 396,
+        "valid": 99,
+        "test": 125
+      },
+      "excluded_subjects": [
+        "sub-235",
+        "sub-335"
+      ],
+      "images_decoded": false
+    },
+    {
+      "fold": 2,
+      "status": "passed",
+      "canonical_subject_count": 622,
+      "usable_subject_count": 620,
+      "split_counts": {
+        "train": 399,
+        "valid": 98,
+        "test": 123
+      },
+      "excluded_subjects": [
+        "sub-235",
+        "sub-335"
+      ],
+      "images_decoded": false
+    },
+    {
+      "fold": 3,
+      "status": "passed",
+      "canonical_subject_count": 622,
+      "usable_subject_count": 620,
+      "split_counts": {
+        "train": 398,
+        "valid": 99,
+        "test": 123
+      },
+      "excluded_subjects": [
+        "sub-235",
+        "sub-335"
+      ],
+      "images_decoded": false
+    },
+    {
+      "fold": 4,
+      "status": "passed",
+      "canonical_subject_count": 622,
+      "usable_subject_count": 620,
+      "split_counts": {
+        "train": 398,
+        "valid": 98,
+        "test": 124
+      },
+      "excluded_subjects": [
+        "sub-235",
+        "sub-335"
+      ],
+      "images_decoded": false
+    }
+  ],
+  "errors": [],
+  "cross_fold": {
+    "expected_subject_count": 620,
+    "test_union_count": 620,
+    "all_test_frequency_one": true
+  }
+}

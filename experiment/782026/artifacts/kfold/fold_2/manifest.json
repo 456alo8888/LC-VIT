@@ -1,0 +1,75 @@
+{
+  "created_at": "2026-08-07T01:56:29.746670+07:00",
+  "experiment_id": "LCVIT_782026",
+  "fold": 2,
+  "seed": 42,
+  "split_protocol": "canonical_5fold_seed42_lcvit_3view_intersection",
+  "canonical_subject_count": 622,
+  "usable_subject_count": 620,
+  "excluded_subjects": [
+    "sub-235",
+    "sub-335"
+  ],
+  "view_names": [
+    "Axial",
+    "Coronal",
+    "Sagittal"
+  ],
+  "view_path_columns": [
+    "axial_path",
+    "coronal_path",
+    "sagittal_path"
+  ],
+  "target_columns": [
+    "gs_rankin_6isdeath",
+    "nihss"
+  ],
+  "tabular_feature_cols": [
+    "sex",
+    "age",
+    "race",
+    "acuteischaemicstroke",
+    "priorstroke",
+    "bmi",
+    "etiology"
+  ],
+  "counts": {
+    "canonical_split_counts": {
+      "train": 399,
+      "valid": 99,
+      "test": 124
+    },
+    "split_counts": {
+      "train": 399,
+      "valid": 98,
+      "test": 123
+    },
+    "dropped_subjects": 2
+  },
+  "sources": {
+    "canonical_fold_dir": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/datasets/fold_raw_trace_fullmodal_mask/MRS/kfold/fold_2",
+    "canonical_split_csvs": {
+      "train": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/datasets/fold_raw_trace_fullmodal_mask/MRS/kfold/fold_2/train.csv",
+      "valid": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/datasets/fold_raw_trace_fullmodal_mask/MRS/kfold/fold_2/valid.csv",
+      "test": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/datasets/fold_raw_trace_fullmodal_mask/MRS/kfold/fold_2/test.csv"
+    },
+    "source_manifest": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/artifacts/manifest_fixed_split/all_subject.csv",
+    "config": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/782026/config/kfold.yaml"
+  },
+  "checksums": {
+    "config_sha256": "999b249b3c012db79caadab4242eb7c5d936f3f2a61087a9e8816f35a84a0764",
+    "source_manifest_sha256": "1e3cae33cee66de585aac1e62a29665847d21d7a744af950603bcb7d7a20ae79",
+    "canonical_split_sha256": {
+      "train": "1a55be68af54f6506119ef61139985724fa51702c8378c4b8dbcb0ed8b2fdfe9",
+      "valid": "135a08d6ba744230c21c59e659c22dcc46c5ef456b344be68f8236bdcdce0150",
+      "test": "899249a6db957a8a85e9629c9482580f6aa52d95b9acb5bdbde70f626532c6f0"
+    }
+  },
+  "files": {
+    "all_subjects_csv": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/782026/artifacts/kfold/fold_2/all_subjects.csv",
+    "train_csv": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/782026/artifacts/kfold/fold_2/train.csv",
+    "valid_csv": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/782026/artifacts/kfold/fold_2/valid.csv",
+    "test_csv": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/782026/artifacts/kfold/fold_2/test.csv",
+    "dropped_subjects_csv": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/782026/artifacts/kfold/fold_2/dropped_subjects.csv"
+  }
+}

@@ -1,0 +1,41 @@
+experiment_id: LCVIT_782026
+seed: 42
+
+paths:
+  canonical_root: code/datasets/fold_raw_trace_fullmodal_mask/MRS/kfold
+  source_manifest: code/baseline_encoder/LC-VIT/experiment/artifacts/manifest_fixed_split/all_subject.csv
+  manifest_root: code/baseline_encoder/LC-VIT/experiment/782026/artifacts/kfold
+  runs_root: code/baseline_encoder/LC-VIT/experiment/782026/runs
+  aggregate_root: code/baseline_encoder/LC-VIT/experiment/782026/aggregate
+  trainer: code/baseline_encoder/LC-VIT/experiment/finetuning/main_finetune.py
+  tcformer_repo: code/baseline_encoder/LC-VIT/TCFormer
+  checkpoint: code/baseline_encoder/LC-VIT/classification/tcformer_light-edacd9e5_20220606.pth
+
+folds: [0, 1, 2, 3, 4]
+targets: [gs_rankin_6isdeath, nihss]
+modes: [fusion, image_only, clinical_only]
+tabular_feature_cols:
+  - sex
+  - age
+  - race
+  - acuteischaemicstroke
+  - priorstroke
+  - bmi
+  - etiology
+
+train:
+  batch_size: 16
+  num_workers: 4
+  max_epochs: 50
+  patience: 12
+  selection_metric: val_mae
+  optimizer: adamw
+  head_lr: 0.0001
+  backbone_lr: 0.00001
+  weight_decay: 0.0001
+
+wandb:
+  enabled: false
+  mode: online
+  project: LC-VIT-stroke-outcome-prediction
+  entity: null
