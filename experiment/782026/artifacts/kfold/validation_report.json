@@ -1,5 +1,5 @@
 {
-  "validated_at": "2026-08-07T01:59:38.862004+07:00",
+  "validated_at": "2026-08-19T09:04:23.339760+07:00",
   "config": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/782026/config/kfold.yaml",
   "check_images": false,
   "status": "passed",
