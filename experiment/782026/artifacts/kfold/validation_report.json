@@ -1,7 +1,7 @@
 {
-  "validated_at": "2026-08-19T09:04:23.339760+07:00",
+  "validated_at": "2026-08-22T09:49:44.422683+07:00",
   "config": "/mnt/disk1/hieupc/4gpus-Stroke-outcome-prediction-code/code/baseline_encoder/LC-VIT/experiment/782026/config/kfold.yaml",
-  "check_images": false,
+  "check_images": true,
   "status": "passed",
   "folds": [
     {
@@ -18,7 +18,7 @@
         "sub-235",
         "sub-335"
       ],
-      "images_decoded": false
+      "images_decoded": true
     },
     {
       "fold": 1,
@@ -34,7 +34,7 @@
         "sub-235",
         "sub-335"
       ],
-      "images_decoded": false
+      "images_decoded": true
     },
     {
       "fold": 2,
@@ -50,7 +50,7 @@
         "sub-235",
         "sub-335"
       ],
-      "images_decoded": false
+      "images_decoded": true
     },
     {
       "fold": 3,
@@ -66,7 +66,7 @@
         "sub-235",
         "sub-335"
       ],
-      "images_decoded": false
+      "images_decoded": true
     },
     {
       "fold": 4,
@@ -82,7 +82,7 @@
         "sub-235",
         "sub-335"
       ],
-      "images_decoded": false
+      "images_decoded": true
     }
   ],
   "errors": [],
